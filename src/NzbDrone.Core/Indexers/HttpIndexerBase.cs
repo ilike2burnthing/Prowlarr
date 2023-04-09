@@ -61,7 +61,7 @@ namespace NzbDrone.Core.Indexers
                 return Task.FromResult(new IndexerPageableQueryResult());
             }
 
-            if (!SupportsPagination && searchCriteria.Offset is > 0)
+            if (!SupportsPagination && searchCriteria.Offset > 0)
             {
                 return Task.FromResult(new IndexerPageableQueryResult());
             }
@@ -76,7 +76,7 @@ namespace NzbDrone.Core.Indexers
                 return Task.FromResult(new IndexerPageableQueryResult());
             }
 
-            if (!SupportsPagination && searchCriteria.Offset is > 0)
+            if (!SupportsPagination && searchCriteria.Offset > 0)
             {
                 return Task.FromResult(new IndexerPageableQueryResult());
             }
@@ -91,7 +91,7 @@ namespace NzbDrone.Core.Indexers
                 return Task.FromResult(new IndexerPageableQueryResult());
             }
 
-            if (!SupportsPagination && searchCriteria.Offset is > 0)
+            if (!SupportsPagination && searchCriteria.Offset > 0)
             {
                 return Task.FromResult(new IndexerPageableQueryResult());
             }
@@ -106,7 +106,7 @@ namespace NzbDrone.Core.Indexers
                 return Task.FromResult(new IndexerPageableQueryResult());
             }
 
-            if (!SupportsPagination && searchCriteria.Offset is > 0)
+            if (!SupportsPagination && searchCriteria.Offset > 0)
             {
                 return Task.FromResult(new IndexerPageableQueryResult());
             }
@@ -121,7 +121,7 @@ namespace NzbDrone.Core.Indexers
                 return Task.FromResult(new IndexerPageableQueryResult());
             }
 
-            if (!SupportsPagination && searchCriteria.Offset is > 0)
+            if (!SupportsPagination && searchCriteria.Offset > 0)
             {
                 return Task.FromResult(new IndexerPageableQueryResult());
             }
