@@ -329,6 +329,24 @@ namespace NzbDrone.Core.Indexers.Definitions.Cardigann
 
                     variables[name] = selected.Key;
                 }
+                else if (setting.Type == "multi-select")
+                {
+                    if (indexerLogging)
+                    {
+                        _logger.Trace($"Setting options: {setting.Options.ToJson()}");
+                    }
+
+                    var sorted = setting.Options.OrderBy(x => x.Key).ToList();
+                    var values = (long[])value;
+                    var selected = sorted.Where((x, i) => values.Contains(i)).ToArray();
+
+                    if (indexerLogging)
+                    {
+                        _logger.Debug($"Selected option: {selected.ToJson()}");
+                    }
+
+                    variables[name] = selected.Select(x => x.Key).ToArray();
+                }
                 else if (setting.Type == "info")
                 {
                     variables[name] = value;

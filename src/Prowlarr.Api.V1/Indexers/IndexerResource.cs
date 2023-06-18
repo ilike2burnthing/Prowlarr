@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using NzbDrone.Common.Extensions;
 using NzbDrone.Core.Annotations;
 using NzbDrone.Core.Indexers;
@@ -153,21 +154,25 @@ namespace Prowlarr.Api.V1.Indexers
             {
                 return value.ToString().ParseInt64() ?? 0;
             }
-            else if (setting.Type == "checkbox")
+
+            if (setting.Type == "multi-select")
             {
-                if (bool.TryParse(value.ToString(), out var result))
+                return value switch
                 {
-                    return result;
-                }
-                else
-                {
-                    return false;
-                }
+                    JsonElement { ValueKind: JsonValueKind.Array } values
+                        => values.EnumerateArray().Select(e => e.ToString().ParseInt64() ?? 0).ToArray(),
+                    JsonElement { ValueKind: JsonValueKind.Number or JsonValueKind.String } singleValue
+                        => new[] { singleValue.ToString().ParseInt64() ?? 0 },
+                    _ => Array.Empty<long>()
+                };
             }
-            else
+
+            if (setting.Type == "checkbox")
             {
-                return value?.ToString() ?? string.Empty;
+                return bool.TryParse(value.ToString(), out var result) && result;
             }
+
+            return value?.ToString() ?? string.Empty;
         }
 
         private Field MapField(SettingsField setting, int order)
@@ -177,7 +182,12 @@ namespace Prowlarr.Api.V1.Indexers
                 Name = setting.Name,
                 Label = setting.Label,
                 Order = order,
-                Type = setting.Type == "text" ? "textbox" : setting.Type
+                Type = setting.Type switch
+                {
+                    "text" => "textbox",
+                    "multi-select" => "tagSelect",
+                    _ => setting.Type
+                }
             };
 
             if (setting.Type == "select")
@@ -186,21 +196,27 @@ namespace Prowlarr.Api.V1.Indexers
                 field.SelectOptions = sorted.Select((x, i) => new SelectOption
                 {
                     Value = i,
-                    Name = x.Value
+                    Name = x.Value,
+                    Order = i
                 }).ToList();
 
                 field.Value = sorted.Select(x => x.Key).ToList().IndexOf(setting.Default);
             }
+            else if (setting.Type == "multi-select")
+            {
+                var sorted = setting.Options.OrderBy(x => x.Key).ToList();
+                field.SelectOptions = sorted.Select((x, i) => new SelectOption
+                {
+                    Value = i,
+                    Name = x.Value,
+                    Order = i
+                }).ToList();
+
+                field.Value = setting.Defaults.Select(d => sorted.Select(x => x.Key).ToList().IndexOf(d)).ToArray();
+            }
             else if (setting.Type == "checkbox")
             {
-                if (bool.TryParse(setting.Default, out var value))
-                {
-                    field.Value = value;
-                }
-                else
-                {
-                    field.Value = false;
-                }
+                field.Value = bool.TryParse(setting.Default, out var value) && value;
             }
             else
             {
