@@ -230,7 +230,7 @@ namespace NzbDrone.Core.Indexers.Definitions
                     InfoHash = row.InfoHash,
                     InfoUrl = details,
                     Guid = details,
-                    Categories = _categories.MapTrackerCatDescToNewznab(row.Category),
+                    Categories = ParseCategories(row),
                     PublishDate = DateTime.Parse(row.CreatedAt, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal),
                     Size = row.Size,
                     Grabs = row.Grabs,
@@ -251,6 +251,42 @@ namespace NzbDrone.Core.Indexers.Definitions
             return releaseInfos
                 .OrderByDescending(o => o.PublishDate)
                 .ToArray();
+        }
+
+        protected virtual List<IndexerCategory> ParseCategories(BeyondHDTorrent row)
+        {
+            var blurayResolutions = new HashSet<string> { "UHD 100", "UHD 66", "UHD 50", "BD 50", "BD 25" };
+            var uhdResolutions = new HashSet<string> { "UHD Remux", "BD Remux", "2160p" };
+            var hdResolutions = new HashSet<string> { "1080p", "1080i", "720p" };
+
+            var cats = new List<IndexerCategory>();
+            cats.AddRange(_categories.MapTrackerCatDescToNewznab(row.Category));
+
+            var type = row.Type;
+
+            switch (row.Category)
+            {
+                case "Movies":
+                    cats.Add(type switch
+                    {
+                        var res when blurayResolutions.Contains(res) => NewznabStandardCategory.MoviesBluRay,
+                        var res when uhdResolutions.Contains(res) => NewznabStandardCategory.MoviesUHD,
+                        var res when hdResolutions.Contains(res) => NewznabStandardCategory.MoviesHD,
+                        _ => NewznabStandardCategory.MoviesSD
+                    });
+                    break;
+                case "TV":
+                    cats.Add(type switch
+                    {
+                        var res when blurayResolutions.Contains(res) => NewznabStandardCategory.TVUHD,
+                        var res when uhdResolutions.Contains(res) => NewznabStandardCategory.TVUHD,
+                        var res when hdResolutions.Contains(res) => NewznabStandardCategory.TVHD,
+                        _ => NewznabStandardCategory.TVSD
+                    });
+                    break;
+            }
+
+            return cats;
         }
 
         public Action<IDictionary<string, string>, DateTime?> CookiesUpdater { get; set; }
